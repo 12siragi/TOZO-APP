@@ -42,8 +42,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'useraccount',
     'rest_framework',
-    'rest_framework_simplejwt'
+    'rest_framework_simplejwt',
+    'allauth',  # Add this
+    'allauth.account',
+    'allauth.socialaccount',  # Add this for social authentication
+    'allauth.socialaccount.providers.google',
+    'tasks',
 ]
+
+
+
 
 
 
@@ -56,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware'
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -138,10 +147,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'useraccount.CustomUser'  # Replace 'yourapp' with your actual app name
 
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
+
 
 # Django project settings.py
 
@@ -187,3 +200,37 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
+
+AUTHENTICATION_BACKENDS = (
+    'allauth.account.auth_backends.AuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Keep this for Django's default auth
+)
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+        'OAUTH_PKCE_ENABLED': True,
+    }
+}
+
+# The URL that users are redirected to after logging in through social auth
+LOGIN_REDIRECT_URL = '/'  # Or wherever you want to redirect
+
+# Allauth settings (you can adjust them as needed)
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = True
+
+# Google API credentials (you can get these from Google Developer Console)
+SOCIAL_AUTH_GOOGLE_CLIENT_ID = '<your-client-id>'
+SOCIAL_AUTH_GOOGLE_SECRET = '<your-client-secret>'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.your-email-provider.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email@example.com'
+EMAIL_HOST_PASSWORD = 'your-email-password'
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development, emails print to console
