@@ -15,6 +15,7 @@ from allauth.socialaccount.models import SocialAccount, SocialToken
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth.tokens import default_token_generator
+from .serializers import UserDetailSerializer
 
 from .serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordChangeSerializer
 
@@ -177,3 +178,27 @@ class EmailVerificationAPIView(APIView):
         user.save()
 
         return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
+
+
+class UserDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserDetailSerializer
+
+    def get(self, request, *args, **kwargs):
+        """
+        Get the details of the authenticated user.
+        """
+        user = request.user
+        serializer = self.serializer_class(user)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        """
+        Update the details of the authenticated user.
+        """
+        user = request.user
+        serializer = self.serializer_class(user, data=request.data, partial=True)  # partial=True allows updating only part of the data
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

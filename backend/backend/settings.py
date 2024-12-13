@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',  # Add this for social authentication
     'allauth.socialaccount.providers.google',
     'tasks',
+    "corsheaders",
 ]
 
 
@@ -59,12 +60,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware should come before CommonMiddleware
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware'
+    'allauth.account.middleware.AccountMiddleware',  # Allauth middleware
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -234,3 +236,6 @@ EMAIL_HOST_USER = 'your-email@example.com'
 EMAIL_HOST_PASSWORD = 'your-email-password'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development, emails print to console
+
+CORS_ALLOW_ALL_ORIGINS =  True
+

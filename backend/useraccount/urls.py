@@ -7,7 +7,8 @@ from .views import (
     PasswordChangeAPIView,
     EmailVerificationAPIView,
     google_login_callback,
-    validate_google_token
+    validate_google_token,
+    UserDetailAPIView
 )
 
 urlpatterns = [
@@ -35,4 +36,7 @@ urlpatterns = [
 
     # Validate Google token endpoint
     path('validate-google-token/', validate_google_token, name='validate_google_token'),
+
+    #user-detail
+    path('user-details/', UserDetailAPIView.as_view(), name='user-details'),
 ]

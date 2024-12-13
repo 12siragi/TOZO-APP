@@ -10,20 +10,53 @@ UserModel = get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password1 = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = UserModel
-        fields = ['email', 'username', 'password']
+        fields = ("id", "username", "email", "password1", "password2")
+        extra_kwargs = {
+            "password1": {"write_only": True},
+            "password2": {"write_only": True},
+        }
+
+    def validate(self, attrs):
+        # Check if both passwords match
+        if attrs['password1'] != attrs['password2']:
+            raise serializers.ValidationError("Passwords do not match!")
+
+        password = attrs.get("password1", "")
+        # Check if password meets minimum length requirements
+        if len(password) < 8:
+            raise serializers.ValidationError("Passwords must be at least 8 characters!")
+
+        # Email validation: Check if email is in the correct format
+        email = attrs.get('email', '')
+        if not email or '@' not in email:
+            raise serializers.ValidationError("Invalid email format.")
+        
+        # Check if the email already exists in the database
+        if UserModel.objects.filter(email=email).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+
+        return attrs
 
     def create(self, validated_data):
-        user = UserModel.objects.create_user(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            password=validated_data['password']
-        )
-        return user
+        # Remove password2 field before creating the user
+        password = validated_data.pop("password1")
+        validated_data.pop("password2")
 
+        # Create the user
+        user = UserModel.objects.create_user(password=password, **validated_data)
+
+        # Generate a token for email verification (optional)
+        refresh = RefreshToken.for_user(user)
+        # Email verification token or link can be sent via email
+        # Example: Send verification link with token
+
+        return user
+    
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -46,6 +79,7 @@ class LoginSerializer(serializers.Serializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
 
 
 class PasswordResetSerializer(serializers.Serializer):
@@ -107,3 +141,15 @@ class EmailVerificationSerializer(serializers.Serializer):
             return value
         else:
             raise serializers.ValidationError("Invalid or expired token.")
+        
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
+        fields = ['id', 'username', 'email']  # Include other fields as needed
+
+    def update(self, instance, validated_data):
+        # Update user instance with validated data
+        instance.username = validated_data.get('username', instance.username)
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+        return instance
