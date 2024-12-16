@@ -1,5 +1,8 @@
 import axiosClient from './axiosClient';
 
+
+
+
 // User Registration - Handles user registration
 export const register = (userData: {
   email: string;
@@ -30,4 +33,24 @@ export const verifyEmail = (token: string, email: string) =>
 
 // Fetch Current User - Fetches the current logged-in user's data
 export const fetchCurrentUser = () => axiosClient.get('/auth/user/');
+
+// Fetch all tasks
+export const getTasks = async () => {
+  return axiosClient.get('/tasks/');
+};
+
+// Create a new task
+export const createTask = async (task: { title: string; description: string }) => {
+  return axiosClient.post('/tasks/create/', task);
+};
+
+// Fetch task details
+export const getTaskDetail = async (id: number) => {
+  return axiosClient.get(`/tasks/${id}/`);
+};
+
+// Mark task as complete
+export const markTaskComplete = async (id: number) => {
+  return axiosClient.patch(`/tasks/${id}/complete/`);
+};
 

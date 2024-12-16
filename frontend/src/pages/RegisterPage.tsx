@@ -3,14 +3,14 @@ import RegisterForm from '../components/RegisterForm';
 
 const RegisterPage = () => {
   const handleRegisterSuccess = () => {
-    // Handle success (e.g., redirect user to login page)
     console.log('User registered successfully!');
   };
 
   return (
-    <div>
-      <h2>Register Page</h2>
-      <RegisterForm onRegisterSuccess={handleRegisterSuccess} />
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-lg">
+        <RegisterForm onRegisterSuccess={handleRegisterSuccess} />
+      </div>
     </div>
   );
 };

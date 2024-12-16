@@ -8,9 +8,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div>
-      <h2>Login Page</h2>
-      <LoginForm onLoginSuccess={handleLoginSuccess} />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="max-w-lg w-full px-6">
+        <LoginForm onLoginSuccess={handleLoginSuccess} />
+      </div>
     </div>
   );
 };
