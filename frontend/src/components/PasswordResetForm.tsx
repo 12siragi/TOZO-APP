@@ -1,55 +1,82 @@
-import React, { useState } from 'react';
-import { requestPasswordReset } from '../api/authAPI'; // Adjust the import to your API function
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getTaskDetail, markTaskComplete } from '../api/authAPI'; // Import API functions
 
-const PasswordResetRequestForm: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+const TaskDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const parsedId = id ? parseInt(id) : null; // Parse id once
+  const [task, setTask] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isTaskComplete, setIsTaskComplete] = useState<boolean>(false); // To track task completion status
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage('');
+  useEffect(() => {
+    const fetchTaskDetail = async () => {
+      if (parsedId) {
+        try {
+          const response = await getTaskDetail(parsedId); // Fetch task details by ID
+          setTask(response.data);
+          setIsTaskComplete(response.data.isComplete); // Assuming the response includes a 'isComplete' field
+        } catch (error) {
+          setError('Error fetching task details. Please try again.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
 
-    try {
-      await requestPasswordReset(email); // Send email to backend for password reset link
-      setMessage('Password reset email has been sent. Please check your inbox.');
-    } catch (error) {
-      setMessage('Failed to send reset email. Please try again.');
-    } finally {
-      setIsLoading(false);
+    fetchTaskDetail();
+  }, [parsedId]);
+
+  const handleMarkComplete = async () => {
+    if (parsedId && !isTaskComplete) {
+      try {
+        await markTaskComplete(parsedId); // Mark task as complete via API
+        setIsTaskComplete(true); // Update state to reflect task completion
+        navigate('/tasks'); // Redirect to tasks list after completion
+      } catch (error) {
+        setError('Error marking task as complete. Please try again.');
+      }
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email:</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center mt-10">
+        <div className="spinner-border animate-spin h-8 w-8 border-4 border-t-4 border-gray-700 rounded-full"></div>
+        <span className="ml-2 text-gray-500">Loading task details...</span>
       </div>
+    );
+  }
 
+  if (error) {
+    return <div className="text-center text-red-500">{error}</div>;
+  }
+
+  return task ? (
+    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-3xl font-semibold text-center text-gray-800 mb-6">{task.title}</h2>
+      <p className="text-lg text-gray-700 mb-6">{task.description}</p>
+      
+      {/* Mark as complete button */}
       <button
-        type="submit"
-        disabled={isLoading}
-        className={`w-full py-3 px-4 rounded-md text-white font-semibold ${isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+        onClick={handleMarkComplete}
+        disabled={isTaskComplete} // Disable button if task is complete
+        className={`w-full sm:w-auto ${isTaskComplete ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'} text-white font-semibold py-2 px-4 rounded-md shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-green-500`}
       >
-        {isLoading ? 'Processing...' : 'Request Password Reset'}
+        {isTaskComplete ? 'Task Completed' : 'Mark as Complete'}
       </button>
 
-      {message && (
-        <p className={`text-center mt-4 text-sm ${message.includes('Failed') ? 'text-red-500' : 'text-green-500'}`}>
-          {message}
-        </p>
-      )}
-    </form>
+      {/* Additional task information */}
+      <div className="mt-6 text-sm text-gray-500">
+        <p><strong>Created At:</strong> {new Date(task.createdAt).toLocaleDateString()}</p>
+        <p><strong>Due Date:</strong> {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'N/A'}</p>
+      </div>
+    </div>
+  ) : (
+    <div className="text-center text-gray-500">Task not found.</div>
   );
 };
 
-export default PasswordResetRequestForm;
+export default TaskDetail;
